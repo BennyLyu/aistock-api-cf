@@ -15,6 +15,7 @@ import { StockOcrController } from './controllers/StockOcrController';
 import { TencentQuoteController } from './controllers/TencentQuoteController';
 import { IpoController, GdhsController, TencentKlineController } from './controllers/DataCenterController';
 import { StockFinanceController, StockAnnouncementController, StockNewsController } from './controllers/StockDetailController';
+import { MoneyFlowController, NorthboundController, DragonTigerController, BlockTradeController } from './controllers/QuantDataController';
 import { readFileSync } from 'node:fs';
 
 const frontendHtml = readFileSync('./frontend/index.html', 'utf8');
@@ -107,6 +108,11 @@ const queryRoutes: [string, QueryRouteHandler][] = [
     ['/api/cn/stock/finance', StockFinanceController.getFinance.bind(StockFinanceController)],
     ['/api/cn/stock/announcements', StockAnnouncementController.getAnnouncements.bind(StockAnnouncementController)],
     ['/api/cn/stock/news', StockNewsController.getNews.bind(StockNewsController)],
+    ['/api/cn/stock/moneyflow', MoneyFlowController.getMoneyFlow.bind(MoneyFlowController)],
+    ['/api/cn/market/moneyflow', MoneyFlowController.getMarketFlow.bind(MoneyFlowController)],
+    ['/api/cn/northbound', NorthboundController.getNorthbound.bind(NorthboundController)],
+    ['/api/cn/dragontiger', DragonTigerController.getDragonTiger.bind(DragonTigerController)],
+    ['/api/cn/blocktrade', BlockTradeController.getBlockTrades.bind(BlockTradeController)],
 ];
 
 const symbolQueryRoutes: [RegExp, SymbolQueryRouteHandler][] = [
