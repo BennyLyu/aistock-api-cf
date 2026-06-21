@@ -1,6 +1,6 @@
 name = 'aistock-extapi'
 main = "src/index.ts"
-compatibility_date = "2026-01-08"
+compatibility_date = "2026-06-08"
 compatibility_flags = ["nodejs_compat"]
 
 # 为了打包文档等非代码文件，开启以下选项
@@ -17,9 +17,9 @@ fallthrough = true
 # 微信公众号 AppID
 WECHAT_APPID = "wx61330ef0702949b8"
 # 前端首页地址（登录成功后跳转）
-FRONTEND_URL = "https://stock.102465.xyz"
+FRONTEND_URL = "https://my-stock-dashboard-251.pages.dev"
 COOKIE_DOMAIN = "102465.xyz"
-CORS_ALLOW_ORIGIN = "https://stock.102465.xyz"
+CORS_ALLOW_ORIGIN = "*"
 
 # 大模型评价接口地址
 OPENAI_API_BASE_URL = "https://gen.pollinations.ai/v1/chat/completions"
@@ -33,17 +33,21 @@ OCR_MODEL = "openai"
 
 # KV Namespace binding
 [[kv_namespaces]]
-binding = "KV" 
-id = "2e22a1ea7d91471e8476969f8e89ccab"
+binding = "KV"
+id = "b5bf6ad60737483fb9110e8d02201141"
 
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
-database_name = "aistock"
-database_id = "f6efa1f1-4414-491c-a5d6-809fb1adfb8d" # 运行 wrangler d1 create aistock 后填入
+database_name = "aistock-db"
+database_id = "2178be35-6244-4c5a-8cdb-483af180a5b0" # 运行 wrangler d1 create aistock 后填入
+
+# [[routes]]
+# pattern = "stock-api.102465.xyz"
+# custom_domain = true
 
 [[routes]]
-pattern = "stock-api.102465.xyz"
+pattern = "microice.dpdns.org"
 custom_domain = true
 
 [observability]

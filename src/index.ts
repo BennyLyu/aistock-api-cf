@@ -12,7 +12,11 @@ import { WechatEventController } from './controllers/WechatEventController';
 import { ScanLoginController } from './controllers/ScanLoginController';
 import { StockAnalysisController } from './controllers/StockAnalysisController';
 import { StockOcrController } from './controllers/StockOcrController';
+import { TencentQuoteController } from './controllers/TencentQuoteController';
+import { IpoController, GdhsController, TencentKlineController } from './controllers/DataCenterController';
 import { readFileSync } from 'node:fs';
+
+const frontendHtml = readFileSync('./frontend/index.html', 'utf8');
 import { createResponse } from './utils/response';
 import { isValidAShareSymbol } from './utils/validator';
 
@@ -93,6 +97,12 @@ const queryRoutes: [string, QueryRouteHandler][] = [
     ['/api/cn/stocks/ocr', StockOcrController.batchOcr.bind(StockOcrController)],
     ['/api/cn/index/quotes', IndexQuoteController.getIndexQuotes.bind(IndexQuoteController)],
     ['/api/gb/index/quotes', IndexQuoteController.getGlobalIndexQuotes.bind(IndexQuoteController)],
+    ['/api/tencent/stock/quotes', TencentQuoteController.getStockQuotes.bind(TencentQuoteController)],
+    ['/api/tencent/index/quotes', TencentQuoteController.getIndexQuotes.bind(TencentQuoteController)],
+    ['/api/tencent/debug', TencentQuoteController.debug.bind(TencentQuoteController)],
+    ['/api/tencent/kline', TencentKlineController.getKline.bind(TencentKlineController)],
+    ['/api/cn/ipo/list', IpoController.getIpoList.bind(IpoController)],
+    ['/api/cn/gdhs/decrease', GdhsController.getDecrease.bind(GdhsController)],
 ];
 
 const symbolQueryRoutes: [RegExp, SymbolQueryRouteHandler][] = [
@@ -212,7 +222,8 @@ function createDocResponse(): Response {
 }
 
 function getCorsOrigin(request: Request, env: Env): string | null {
-    if (env.CORS_ALLOW_ORIGIN && env.CORS_ALLOW_ORIGIN !== '*') return env.CORS_ALLOW_ORIGIN;
+    if (env.CORS_ALLOW_ORIGIN === '*') return '*';
+    if (env.CORS_ALLOW_ORIGIN) return env.CORS_ALLOW_ORIGIN;
     if (env.FRONTEND_URL) {
         try {
             return new URL(env.FRONTEND_URL).origin;
@@ -258,16 +269,10 @@ export default {
             const { pathname } = url;
 
             if (pathname === '/' || pathname === '') {
-                return withCors(
-                    createResponse(200, 'healthy', {
-                        status: 'ok',
-                        service: 'aistock-api-cf',
-                        timestamp: new Date().toISOString(),
-                        docs: '/doc',
-                    }),
-                    request,
-                    env,
-                );
+                return new Response(frontendHtml, {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                });
             }
 
             if (pathname === '/doc' || pathname === '/doc/') {
