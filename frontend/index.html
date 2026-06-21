@@ -68,6 +68,7 @@
 </div>
 <div class="tabs">
     <div class="tab active" data-panel="panelQuote">行情</div>
+    <div class="tab" data-panel="panelDetail">个股详情</div>
     <div class="tab" data-panel="panelIpo">新股发行</div>
     <div class="tab" data-panel="panelGdhs">散户集中</div>
 </div>
@@ -95,6 +96,22 @@
     </div>
     <div class="section-label">大盘指数</div>
     <div class="quote-grid" id="indexGrid"><div class="loading">正在加载指数...</div></div>
+</div>
+
+<!-- 个股详情面板 -->
+<div class="panel" id="panelDetail">
+    <div class="add-bar">
+        <input id="detailInput" placeholder="输入股票代码查看详情" maxlength="6" value="">
+        <button onclick="loadDetail()">查询</button>
+    </div>
+    <div id="detailContent">
+        <div class="section-label">财务分析</div>
+        <div class="table-wrap" id="financeWrap"><div class="loading">输入代码后查询</div></div>
+        <div class="section-label">公司公告</div>
+        <div class="table-wrap" id="announcementWrap"><div class="loading">输入代码后查询</div></div>
+        <div class="section-label">个股新闻</div>
+        <div class="table-wrap" id="newsWrap"><div class="loading">输入代码后查询</div></div>
+    </div>
 </div>
 
 <!-- 新股面板 -->
@@ -254,6 +271,7 @@ function bindCardClick(container) {
             selectedSymbol = card.dataset.symbol;
             selectedName = card.dataset.name || selectedSymbol;
             document.getElementById('chartTitle').textContent = `${selectedName} (${selectedSymbol})`;
+            document.getElementById('detailInput').value = selectedSymbol;
             fetchKline(selectedSymbol, currentPeriod);
         });
     });
@@ -388,6 +406,75 @@ function sortGdhs(col) {
         return gdhsSortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
     });
     renderGdhs();
+}
+
+// ===== 个股详情 =====
+let detailSymbol = '';
+document.getElementById('detailInput').addEventListener('keydown', e => { if (e.key === 'Enter') loadDetail(); });
+
+function loadDetail() {
+    const input = document.getElementById('detailInput');
+    const code = input.value.trim();
+    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) { alert('请输入6位数字代码'); return; }
+    detailSymbol = code;
+    fetchFinance(code);
+    fetchAnnouncements(code);
+    fetchStockNews(code);
+}
+
+async function fetchFinance(symbol) {
+    const wrap = document.getElementById('financeWrap');
+    wrap.innerHTML = '<div class="loading">加载中...</div>';
+    try {
+        const r = await fetch(`${API}/api/cn/stock/finance?symbol=${symbol}`);
+        const j = await r.json();
+        const list = j.data?.['财务数据'] || [];
+        if (!list.length) { wrap.innerHTML = '<div class="loading">暂无财务数据</div>'; return; }
+        const cols = Object.keys(list[0]);
+        wrap.innerHTML = `<h3>财务分析 — ${symbol} <span style="font-size:11px;color:var(--text2)">来源: 东方财富</span></h3>
+            <table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+            <tbody>${list.map(row=>`<tr>${cols.map(c=>{
+                const v = row[c] || '--';
+                const isGood = String(v).includes('-') ? 'up' : (String(v).includes('%') && parseFloat(v) > 0) ? 'down' : '';
+                return `<td class="${c.includes('增长') ? cls(parseFloat(v)) : ''}">${v}</td>`;
+            }).join('')}</tr>`).join('')}</tbody></table>`;
+    } catch(e) { wrap.innerHTML = `<div class="error">财务数据加载失败: ${e.message}</div>`; }
+}
+
+async function fetchAnnouncements(symbol) {
+    const wrap = document.getElementById('announcementWrap');
+    wrap.innerHTML = '<div class="loading">加载中...</div>';
+    try {
+        const r = await fetch(`${API}/api/cn/stock/announcements?symbol=${symbol}`);
+        const j = await r.json();
+        const list = j.data?.['公告列表'] || [];
+        if (!list.length) { wrap.innerHTML = '<div class="loading">暂无公告</div>'; return; }
+        wrap.innerHTML = `<h3>公司公告 — ${symbol} <span style="font-size:11px;color:var(--text2)">来源: 东方财富</span></h3>
+            <table><thead><tr><th>日期</th><th>标题</th><th>来源</th></tr></thead>
+            <tbody>${list.map(i=>`<tr>
+                <td>${i['公告日期']}</td>
+                <td>${i['链接'] ? `<a href="${i['链接']}" target="_blank">${i['标题']}</a>` : i['标题']}</td>
+                <td>${i['来源']}</td>
+            </tr>`).join('')}</tbody></table>`;
+    } catch(e) { wrap.innerHTML = `<div class="error">公告加载失败: ${e.message}</div>`; }
+}
+
+async function fetchStockNews(symbol) {
+    const wrap = document.getElementById('newsWrap');
+    wrap.innerHTML = '<div class="loading">加载中...</div>';
+    try {
+        const r = await fetch(`${API}/api/cn/stock/news?symbol=${symbol}`);
+        const j = await r.json();
+        const list = j.data?.['新闻列表'] || [];
+        if (!list.length) { wrap.innerHTML = '<div class="loading">暂无新闻</div>'; return; }
+        wrap.innerHTML = `<h3>个股新闻 — ${symbol} <span style="font-size:11px;color:var(--text2)">来源: 东方财富</span></h3>
+            <table><thead><tr><th>时间</th><th>标题</th><th>来源</th></tr></thead>
+            <tbody>${list.map(i=>`<tr>
+                <td style="white-space:nowrap">${i['时间']}</td>
+                <td>${i['链接'] ? `<a href="${i['链接']}" target="_blank">${i['标题']}</a>` : i['标题']}${i['摘要'] ? `<div style="color:var(--text2);font-size:11px;margin-top:3px">${i['摘要']}</div>` : ''}</td>
+                <td>${i['来源']}</td>
+            </tr>`).join('')}</tbody></table>`;
+    } catch(e) { wrap.innerHTML = `<div class="error">新闻加载失败: ${e.message}</div>`; }
 }
 
 // ===== 初始化 =====

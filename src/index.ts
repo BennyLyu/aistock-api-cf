@@ -14,6 +14,7 @@ import { StockAnalysisController } from './controllers/StockAnalysisController';
 import { StockOcrController } from './controllers/StockOcrController';
 import { TencentQuoteController } from './controllers/TencentQuoteController';
 import { IpoController, GdhsController, TencentKlineController } from './controllers/DataCenterController';
+import { StockFinanceController, StockAnnouncementController, StockNewsController } from './controllers/StockDetailController';
 import { readFileSync } from 'node:fs';
 
 const frontendHtml = readFileSync('./frontend/index.html', 'utf8');
@@ -103,6 +104,9 @@ const queryRoutes: [string, QueryRouteHandler][] = [
     ['/api/tencent/kline', TencentKlineController.getKline.bind(TencentKlineController)],
     ['/api/cn/ipo/list', IpoController.getIpoList.bind(IpoController)],
     ['/api/cn/gdhs/decrease', GdhsController.getDecrease.bind(GdhsController)],
+    ['/api/cn/stock/finance', StockFinanceController.getFinance.bind(StockFinanceController)],
+    ['/api/cn/stock/announcements', StockAnnouncementController.getAnnouncements.bind(StockAnnouncementController)],
+    ['/api/cn/stock/news', StockNewsController.getNews.bind(StockNewsController)],
 ];
 
 const symbolQueryRoutes: [RegExp, SymbolQueryRouteHandler][] = [
